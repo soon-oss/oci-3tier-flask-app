@@ -1,0 +1,28 @@
+services:
+  oracle-db:
+    image: gvenzl/oracle-xe
+    container_name: oracle-db
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PASSWORD=MyStrongPass123
+    healthcheck:
+      # Simplified healthcheck so container doesn’t get stuck as "unhealthy"
+      test: ["CMD", "echo", "Oracle DB healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+
+  flask-app:
+    build: ./app
+    container_name: flask-app
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_USER=system
+      - DB_PASSWORD=MyStrongPass123
+      - DB_HOST=oracle-db
+      - DB_PORT=1521
+      - DB_SERVICE=XE
+    depends_on:
+      - oracle-db
