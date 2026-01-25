@@ -51,12 +51,30 @@ This project simulates a typical cloud-native architecture that could be deploye
 
 ---
 
+## ☁️ Target Cloud Architecture (OCI)
+
+This application is designed to be deployed on Oracle Cloud Infrastructure (OCI) using a standard, production-style 3-tier architecture.
+
+**Proposed OCI deployment design:**
+- OCI Virtual Cloud Network (VCN) with public and private subnets
+- Public Load Balancer exposing the Flask API
+- Compute Instances or OCI Container Instances running the Flask application
+- Oracle Autonomous Database or Oracle Database on OCI Compute as the backend datastore
+- IAM policies to control access between services
+- Security lists and network segmentation to isolate application and database tiers
+- Optional CI/CD automation using OCI DevOps for build and deployment
+
+This design follows cloud best practices for scalability, security, and separation of concerns, and can be adapted to other major cloud platforms with minimal changes.
+
+---
+
 ## Next Steps
 
-- Deploy this app to Oracle Cloud (when tenancy is active)
-- Add JWT authentication for users
-- Add a frontend UI with Bootstrap or React
-- Automate with CI/CD pipeline
+- Deploy the application to Oracle Cloud Infrastructure using OCI Compute or Container Instances
+- Implement CI/CD automation using OCI DevOps
+- Add JWT-based authentication and authorization
+- Introduce a frontend UI (React or Bootstrap)
+- Enhance observability with logging and monitoring
 
 ---
 
