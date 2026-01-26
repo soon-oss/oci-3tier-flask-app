@@ -1,0 +1,11 @@
+# Ignore specific secrets file
+terraform.tfvars
+*.tfvars
+
+# Ignore Terraform state files (Local state)
+*.tfstate
+*.tfstate.backup
+
+# Ignore the .terraform directory (Downloaded providers/modules)
+.terraform/
+.terraform.lock.hcl
