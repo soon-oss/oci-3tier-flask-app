@@ -2,44 +2,40 @@ version: '3.8'
 
 services:
   oracle-db:
-    image: gvenzl/oracle-xe:21-slim
+    image: gvenzl/oracle-free:23-slim
     container_name: oracle-db
     environment:
-      # Note: ORACLE_PASSWORD is for the SYSTEM/SYS accounts
-      - ORACLE_PASSWORD=MyStrongPass123
-      - APP_USER=APPUSER
-      - APP_USER_PASSWORD=AppPass123
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD}
+      - APP_USER=${APP_USER}
+      - APP_USER_PASSWORD=${APP_USER_PASSWORD}
     ports:
       - "1521:1521"
     volumes:
+      - oracle_data:/opt/oracle/oradata
       - ./db/seed.sql:/container-entrypoint-initdb.d/seed.sql:ro
-    # -------------------------------------------------------------------------
-    # UPGRADE: Healthcheck
-    # This queries the DB every 10s. The container is only "healthy" when this passes.
-    # -------------------------------------------------------------------------
     healthcheck:
-      test: ["CMD-SHELL", "sqlplus -L -S ${APP_USER}/${APP_USER_PASSWORD}@//localhost:1521/XEPDB1 <<< 'SELECT 1 FROM DUAL;'"]
+      test: ["CMD-SHELL", "sqlplus -L -S ${APP_USER}/${APP_USER_PASSWORD}@//localhost:1521/FREEPDB1 <<< 'SELECT 1 FROM DUAL;'"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s  # Give Oracle 30s to boot before it starts failing checks
+      start_period: 30s
 
   flask-app:
-  build:
-    context: .
-    dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: flask-app
     environment:
-      - DB_USER=APPUSER
-      - DB_PASSWORD=AppPass123
+      - DB_USER=${APP_USER}
+      - DB_PASSWORD=${APP_USER_PASSWORD}
       - DB_HOST=oracle-db
       - DB_PORT=1521
-      - DB_SERVICE=XEPDB1
+      - DB_SERVICE=FREEPDB1
     ports:
       - "5000:5000"
-    # -------------------------------------------------------------------------
-    # UPGRADE: Dependency Logic
-    # -------------------------------------------------------------------------
     depends_on:
-      oracle-db:          # <--- REMOVED THE DASH (-). This must be a map, not a list.
+      oracle-db:
         condition: service_healthy
+
+volumes:
+  oracle_data:
