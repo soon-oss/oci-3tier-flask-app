@@ -1,28 +1,43 @@
+version: '3.8'
+
 services:
   oracle-db:
-    image: gvenzl/oracle-xe
+    image: gvenzl/oracle-xe:21-slim
     container_name: oracle-db
+    environment:
+      # Note: ORACLE_PASSWORD is for the SYSTEM/SYS accounts
+      - ORACLE_PASSWORD=MyStrongPass123
+      - APP_USER=APPUSER
+      - APP_USER_PASSWORD=AppPass123
     ports:
       - "1521:1521"
-    environment:
-      - ORACLE_PASSWORD=MyStrongPass123
+    volumes:
+      - ./db/seed.sql:/container-entrypoint-initdb.d/seed.sql:ro
+    # -------------------------------------------------------------------------
+    # UPGRADE: Healthcheck
+    # This queries the DB every 10s. The container is only "healthy" when this passes.
+    # -------------------------------------------------------------------------
     healthcheck:
-      # Simplified healthcheck so container doesn’t get stuck as "unhealthy"
-      test: ["CMD", "echo", "Oracle DB healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 20
+      test: ["CMD-SHELL", "sqlplus -L -S ${APP_USER}/${APP_USER_PASSWORD}@//localhost:1521/XEPDB1 <<< 'SELECT 1 FROM DUAL;'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s  # Give Oracle 30s to boot before it starts failing checks
 
   flask-app:
     build: ./app
     container_name: flask-app
-    ports:
-      - "5000:5000"
     environment:
-      - DB_USER=system
-      - DB_PASSWORD=MyStrongPass123
+      - DB_USER=APPUSER
+      - DB_PASSWORD=AppPass123
       - DB_HOST=oracle-db
       - DB_PORT=1521
-      - DB_SERVICE=XE
+      - DB_SERVICE=XEPDB1
+    ports:
+      - "5000:5000"
+    # -------------------------------------------------------------------------
+    # UPGRADE: Dependency Logic
+    # -------------------------------------------------------------------------
     depends_on:
-      - oracle-db
+      oracle-db:          # <--- REMOVED THE DASH (-). This must be a map, not a list.
+        condition: service_healthy
