@@ -25,7 +25,9 @@ services:
       start_period: 30s  # Give Oracle 30s to boot before it starts failing checks
 
   flask-app:
-    build: ./app
+  build:
+    context: .
+    dockerfile: Dockerfile
     container_name: flask-app
     environment:
       - DB_USER=APPUSER
