@@ -1,7 +1,7 @@
 # ==========================================
 # STAGE 1: Builder (Compile and Install)
 # ==========================================
-FROM python:3.9-slim as builder
+FROM python:3.9-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
