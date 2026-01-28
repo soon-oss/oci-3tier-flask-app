@@ -1,82 +1,93 @@
-# OCI 3-Tier Flask App (Portfolio Project)
+# OCI 3-Tier Cloud-Native Application ☁️
 
-A containerised 3-tier web application built with Flask, Oracle XE Database, and Docker Compose.  
-This project simulates a typical cloud-native architecture that could be deployed on Oracle Cloud Infrastructure (OCI) or any modern cloud platform.
+![CI Pipeline](https://github.com/soon-oss/oci-3tier-flask-app/actions/workflows/ci.yml/badge.svg)
+![Oracle 23ai](https://img.shields.io/badge/Oracle-Database%2023ai-c74634?logo=oracle&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ed?logo=docker&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-7b42bc?logo=terraform&logoColor=white)
 
----
+> **🏆 Award Winner:** Rated Top 500 Learner (out of 1M+ participants) in the **Oracle Race to Certification 2025**.
 
-## 🏗 Architecture
-![Architecture Diagram](architecture.png)
+## 📖 Project Overview
+This repository demonstrates a **production-grade 3-tier web architecture** designed for the Oracle Cloud Infrastructure (OCI) ecosystem. 
+
+Unlike standard tutorials, this project simulates a real-world enterprise environment locally using **Docker Compose** for orchestration and **Terraform** for network modeling. It implements strict **DevSecOps** principles, including automated CI/CD pipelines, secret management, and least-privilege container security.
+
+### 🏗 Architecture
+The application follows a strict separation of concerns (Public vs. Private Subnets) to mimic an OCI VCN design.
+
+```mermaid
+graph TD;
+    User((Internet User)) -->|HTTPS/443| LB[Load Balancer / Gateway];
+    
+    subgraph "Public Subnet (DMZ)"
+        LB -->|Traffic Route| Flask[Flask Application Container];
+    end
+    
+    subgraph "Private Subnet (Secured)"
+        Flask -->|Net Protocol / Port 1521| DB[(Oracle Database 23ai)];
+    end
+
+    style Flask fill:#2496ed,stroke:#fff,stroke-width:2px,color:#fff
+    style DB fill:#c74634,stroke:#fff,stroke-width:2px,color:#fff
+
+```
+
+## 🚀 Key Features
+
+* **☁️ Cloud-Native Simulation:** Uses **Terraform** (`main.tf`) to model OCI Virtual Cloud Networks (VCN), separating Public (App) and Private (DB) subnets.
+* **🐳 Optimized Containers:** Implements **Multi-Stage Docker Builds** to reduce image size and remove build tools from production.
+* **🛡️ Enterprise Security:** * **Non-Root User:** Containers run as `appuser`, not root.
+* **Secret Management:** Credentials injected via Environment Variables (never hardcoded).
+* **Oracle Thin Mode:** Uses `python-oracledb` for efficient, client-less connections.
 
 
----
+* **🤖 Automated DevOps:** A **GitHub Actions** pipeline automatically lints code (`flake8`), builds Docker images, and scans for vulnerabilities (`Trivy`) on every push.
 
-## ⚙️ Tech Stack
-- Python 3.10  
-- Flask (REST API)  
-- Oracle XE 21c Database (Dockerized)  
-- Docker / Docker Compose  
+## 🛠 Tech Stack
 
----
+| Component | Technology | Role |
+| --- | --- | --- |
+| **Frontend/API** | Python Flask | REST API & Web Server |
+| **Database** | Oracle Database 23ai | Vector-Ready Relational DB |
+| **Infrastructure** | Terraform | Infrastructure as Code (IaC) |
+| **Orchestration** | Docker Compose | Local Microservices Management |
+| **CI/CD** | GitHub Actions | Automated Testing & Security Scanning |
 
-## How to run
+## ⚡ Quick Start
 
-1. Clone the repository:
+### Prerequisites
 
-   ```bash
-   git clone https://github.com/soon-oss/oci-3tier-flask-app.git
-   cd oci-3tier-flask-app
-   ```
+* Docker & Docker Compose installed.
+* Git installed.
 
-3. Build and start the containers:
+### 1. Clone the Repository
 
-   ```bash
-   docker compose up --build -d
-   docker exec -it oracle-db bash -c "createAppUser APPUSER AppPass123"
-   docker compose restart flask-app
-   ```
+```bash
+git clone [https://github.com/soon-oss/oci-3tier-flask-app.git](https://github.com/soon-oss/oci-3tier-flask-app.git)
+cd oci-3tier-flask-app
 
-4. Access the Flask app:
-   
-- API base: http://localhost:5000
-- Health check: http://localhost:5000/health
-- Users endpoint: http://localhost:5000/users
+```
 
----
+### 2. Launch the Stack
 
-## Features
+This command spins up the Database and App. The App will automatically **wait** for the Database to be healthy before starting (using Healthchecks).
 
-- /health → verifies the app is running
-- /users → fetches dummy users from the Oracle DB
+```bash
+docker-compose up --build
 
----
+```
 
-## ☁️ Target Cloud Architecture (OCI)
+### 3. Verify Deployment
 
-This application is designed to be deployed on Oracle Cloud Infrastructure (OCI) using a standard, production-style 3-tier architecture.
+* **Web App:** Visit `http://localhost:5000`
+* **Health Check:** Visit `http://localhost:5000/health` (Returns JSON DB status)
 
-**Proposed OCI deployment design:**
-- OCI Virtual Cloud Network (VCN) with public and private subnets
-- Public Load Balancer exposing the Flask API
-- Compute Instances or OCI Container Instances running the Flask application
-- Oracle Autonomous Database or Oracle Database on OCI Compute as the backend datastore
-- IAM policies to control access between services
-- Security lists and network segmentation to isolate application and database tiers
-- Optional CI/CD automation using OCI DevOps for build and deployment
+## 👨‍💻 About the Author
 
-This design follows cloud best practices for scalability, security, and separation of concerns, and can be adapted to other major cloud platforms with minimal changes.
+**Certified OCI Architect & DevOps Professional**
 
----
+Building bridges between On-Premise legacy and Cloud-Native futures.
 
-## Next Steps
-
-- Deploy the application to Oracle Cloud Infrastructure using OCI Compute or Container Instances
-- Implement CI/CD automation using OCI DevOps
-- Add JWT-based authentication and authorization
-- Introduce a frontend UI (React or Bootstrap)
-- Enhance observability with logging and monitoring
-
----
-
-👤 Author
-Created by soon-oss
+* **Certifications:** OCI Architect Associate, OCI DevOps Professional, OCI Migrations Architect Professional.
+* **Focus:** Kubernetes, Terraform, and Secure Cloud Architecture.
+* **Contact:** [[LinkedIn](https://www.linkedin.com/in/desmond-soon-248889390/)]
