@@ -1,4 +1,6 @@
-# 1. THE VCN (The Network Hub)
+# --- Network Architecture ---
+# VCN with strict separation between Public and Private subnets
+
 resource "oci_core_vcn" "main_vcn" {
   cidr_block     = var.vcn_cidr
   compartment_id = var.compartment_ocid
@@ -6,14 +8,13 @@ resource "oci_core_vcn" "main_vcn" {
   dns_label      = "mainvcn"
 }
 
-# 2. INTERNET GATEWAY (Allows Traffic In/Out)
 resource "oci_core_internet_gateway" "igw" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main_vcn.id
   display_name   = "InternetGateway"
 }
 
-# 3. ROUTE TABLE (Public Subnet) - Route to Internet
+# --- Public Subnet Configuration ---
 resource "oci_core_route_table" "public_rt" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main_vcn.id
@@ -26,7 +27,6 @@ resource "oci_core_route_table" "public_rt" {
   }
 }
 
-# 4. SECURITY LIST (Public Subnet) - Allow Web + SSH
 resource "oci_core_security_list" "public_sl" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main_vcn.id
@@ -37,9 +37,9 @@ resource "oci_core_security_list" "public_sl" {
     protocol    = "all"
   }
 
-  # Allow SSH (Port 22)
+  # Allow SSH for troubleshooting
   ingress_security_rules {
-    protocol = "6" # TCP
+    protocol = "6"
     source   = "0.0.0.0/0"
     tcp_options {
       min = 22
@@ -47,9 +47,9 @@ resource "oci_core_security_list" "public_sl" {
     }
   }
 
-  # Allow Flask App (Port 5000)
+  # Allow Flask App Traffic
   ingress_security_rules {
-    protocol = "6" # TCP
+    protocol = "6"
     source   = "0.0.0.0/0"
     tcp_options {
       min = 5000
@@ -58,7 +58,6 @@ resource "oci_core_security_list" "public_sl" {
   }
 }
 
-# 5. PUBLIC SUBNET (Where the Flask App lives)
 resource "oci_core_subnet" "public_subnet" {
   cidr_block        = var.public_subnet_cidr
   compartment_id    = var.compartment_ocid
@@ -68,7 +67,7 @@ resource "oci_core_subnet" "public_subnet" {
   security_list_ids = [oci_core_security_list.public_sl.id]
 }
 
-# 6. SECURITY LIST (Private Subnet) - Allow DB access only from VCN
+# --- Private Subnet Configuration ---
 resource "oci_core_security_list" "private_sl" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main_vcn.id
@@ -79,10 +78,10 @@ resource "oci_core_security_list" "private_sl" {
     protocol    = "all"
   }
 
-  # Allow Oracle DB (Port 1521) ONLY from inside the VCN
+  # Security: Allow Oracle DB access ONLY from inside the VCN CIDR
   ingress_security_rules {
     protocol = "6"
-    source   = var.vcn_cidr # Strict Internal Access Only
+    source   = var.vcn_cidr
     tcp_options {
       min = 1521
       max = 1521
@@ -90,17 +89,16 @@ resource "oci_core_security_list" "private_sl" {
   }
 }
 
-# 7. PRIVATE SUBNET (Where the DB lives)
 resource "oci_core_subnet" "private_subnet" {
   cidr_block                 = var.private_subnet_cidr
   compartment_id             = var.compartment_ocid
   vcn_id                     = oci_core_vcn.main_vcn.id
   display_name               = "Private-Subnet-DB"
-  prohibit_public_ip_on_vnic = true # No Public IP allowed!
+  prohibit_public_ip_on_vnic = true # Security: Isolate DB from Internet
   security_list_ids          = [oci_core_security_list.private_sl.id]
 }
 
-# 8. OUTPUTS (What did we build?)
+# --- Outputs ---
 output "vcn_id" {
   value = oci_core_vcn.main_vcn.id
 }
